@@ -12,8 +12,7 @@ const Footer = () => {
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          <p>&copy; 2024 Mengning Li. All rights reserved.</p>
-          <p>Built with ❤️ and modern React technologies</p>
+          <p>&copy; 2025 Mengning Li. All rights reserved.</p>
         </motion.div>
       </div>
     </footer>
