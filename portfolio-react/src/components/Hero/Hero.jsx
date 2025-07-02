@@ -102,25 +102,21 @@ const Hero = () => {
             </motion.div>
           </div>
 
-          <div className="home-info-sections">
-            <div className="info-section">
-              <h3>Interests</h3>
-              <ul>
-                <li>Artificial Intelligence</li>
-                <li>Computational Linguistics</li>
-                <li>Information Retrieval</li>
-              </ul>
-            </div>
-            
-            <div className="info-section">
-              <h3>Education</h3>
-              <div className="education-item">
-                <div className="education-icon">🎓</div>
-                <div>
-                  <h4>Master's in Information Technology</h4>
-                  <p>Griffith University</p>
+          <div className="education-section">
+            <div className="education-card">
+              <div className="education-header">
+                <div className="education-icon">
+                  <i className="fas fa-graduation-cap"></i>
                 </div>
+                <div className="education-badge">Latest Achievement</div>
               </div>
+                             <div className="education-content">
+                 <h3 className="education-degree">Master's in Information Technology</h3>
+                 <div className="education-details">
+                   <p className="education-university">Griffith University</p>
+                   <span className="education-year">2023 - 2025</span>
+                 </div>
+               </div>
             </div>
           </div>
         </motion.div>
