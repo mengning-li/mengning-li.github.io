@@ -45,7 +45,7 @@ npm run build
 
 ## 🌐 Live Demo
 
-Visit the live website: [Your Portfolio URL]
+Visit the live website: https://mengning-li.github.io
 
 ## 📧 Contact
 
