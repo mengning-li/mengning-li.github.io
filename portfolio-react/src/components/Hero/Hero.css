@@ -275,6 +275,35 @@
   font-weight: 500;
 }
 
+/* Dark theme support for education section */
+[data-theme="dark"] .education-card {
+  background: linear-gradient(135deg, rgba(47, 40, 34, 0.9) 0%, rgba(37, 32, 24, 0.95) 100%);
+  border-color: rgba(139, 115, 85, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .education-card:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .education-degree {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .education-university {
+  color: #c4a484;
+}
+
+[data-theme="dark"] .education-badge {
+  background: rgba(196, 164, 132, 0.2);
+  color: #c4a484;
+}
+
+[data-theme="dark"] .education-year {
+  background: rgba(196, 164, 132, 0.1);
+  color: var(--text-secondary);
+}
+
 /* Remove old avatar placeholder styles */
 .avatar-placeholder {
   display: none;

@@ -40,6 +40,13 @@ const Navbar = ({ activeSection, darkMode, toggleDarkMode }) => {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.5 }}
+      style={{ 
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 9999
+      }}
     >
       <div className="nav-container">
         <motion.div 

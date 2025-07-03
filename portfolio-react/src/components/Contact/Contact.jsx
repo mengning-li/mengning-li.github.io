@@ -59,31 +59,32 @@ const Contact = () => {
     }
 
     try {
-      // For now, we'll simulate form submission
-      // In a real implementation, you would:
-      // 1. Send to your backend API
-      // 2. Use a service like EmailJS, Formspree, or Netlify Forms
-      // 3. Use AWS SES, SendGrid, etc.
+      // Submit to Vercel's built-in form handling
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(sanitizedData)
+      })
+
+      if (response.ok) {
+        setSubmitStatus('success')
+        setFormData({ name: '', email: '', subject: '', message: '' })
+      } else {
+        throw new Error('Failed to send message')
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error)
+      setSubmitStatus('error')
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // For demonstration, we'll create a mailto link as fallback
+      // Fallback to mailto
       const subject = encodeURIComponent(sanitizedData.subject || 'Contact from Portfolio Website')
       const body = encodeURIComponent(
         `Name: ${sanitizedData.name}\nEmail: ${sanitizedData.email}\n\nMessage:\n${sanitizedData.message}`
       )
       const mailtoLink = `mailto:limengninglmn@gmail.com?subject=${subject}&body=${body}`
-      
-      // Open email client
-      window.location.href = mailtoLink
-      
-      setSubmitStatus('success')
-      setFormData({ name: '', email: '', subject: '', message: '' })
-      
-    } catch (error) {
-      console.error('Error submitting form:', error)
-      setSubmitStatus('error')
+      window.open(mailtoLink, '_blank')
     } finally {
       setIsSubmitting(false)
     }
