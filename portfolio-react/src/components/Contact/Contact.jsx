@@ -59,20 +59,26 @@ const Contact = () => {
     }
 
     try {
-      // Submit to Vercel's serverless function
-      const response = await fetch('https://mengning-li-github-io.vercel.app/api/contact', {
+      // Submit to your Vercel API with Nodemailer
+      const response = await fetch('https://portfolio-contact-api-iota.vercel.app/api/send-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(sanitizedData)
+        body: JSON.stringify({
+          name: sanitizedData.name,
+          email: sanitizedData.email,
+          message: sanitizedData.message
+        })
       })
 
-      if (response.ok) {
+      const result = await response.json()
+
+      if (response.ok && result.success) {
         setSubmitStatus('success')
         setFormData({ name: '', email: '', subject: '', message: '' })
       } else {
-        throw new Error('Failed to send message')
+        throw new Error(result.message || 'Failed to send message')
       }
     } catch (error) {
       console.error('Error submitting form:', error)
