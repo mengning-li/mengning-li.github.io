@@ -59,8 +59,8 @@ const Contact = () => {
     }
 
     try {
-      // Submit to Vercel's built-in form handling
-      const response = await fetch('/api/contact', {
+      // Submit to Vercel's serverless function
+      const response = await fetch('https://mengning-li-github-io.vercel.app/api/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
