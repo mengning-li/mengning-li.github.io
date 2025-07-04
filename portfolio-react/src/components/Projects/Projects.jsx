@@ -65,15 +65,27 @@ Teachers can upload courses, enroll students, create peer assessments, and downl
     {
       id: 3,
       title: 'Personal Portfolio Website',
-      description: 'A responsive and professional portfolio website showcasing my skills, projects, and contact information. Designed to reflect my personal brand and technical growth.',
-      detailedDescription: `A responsive personal portfolio website using React, showcasing skills, projects, and contact information with clean component-based architecture and plans for AWS integration to handle contact form submissions.`,
+      description: 'A responsive and professional portfolio website showcasing my skills, projects, and contact information. Built with React and deployed on GitHub Pages with Vercel backend integration.',
+      detailedDescription: `A modern, responsive personal portfolio website built with React, featuring a clean component-based architecture. The site showcases my skills, projects, and professional background with an integrated contact form. Deployed on GitHub Pages for the frontend with a separate Vercel backend to handle contact form submissions securely.`,
       icon: 'fas fa-briefcase',
       image: '/images/projects/personal-portfolio.jpg',
-      tech: ['React', 'JavaScript', 'CSS'],
-      features: ['Responsive design', 'Professional layout', 'Contact form'],
-      challenges: ['Creating consistent visual design across different screen sizes', 'Integrating AWS services for reliable contact form message delivery'],
-      liveDemo: '#',
-      code: 'https://github.com/mengning-li/Personal-Portfolio.git'
+      tech: ['React', 'JavaScript', 'CSS', 'Vercel', 'GitHub Pages'],
+      features: [
+        'Responsive design optimized for all devices',
+        'Professional layout with smooth animations',
+        'Interactive contact form with email integration',
+        'Dark theme support throughout the site',
+        'Modern component-based React architecture',
+        'GitHub Pages deployment for fast loading'
+      ],
+      challenges: [
+        'Creating consistent visual design across different screen sizes',
+        'Implementing secure contact form with Vercel backend and Nodemailer',
+        'Setting up cross-origin communication between GitHub Pages and Vercel API',
+        'Optimizing mobile responsiveness and navigation experience'
+      ],
+      liveDemo: 'https://mengning-li.github.io',
+      code: 'https://github.com/mengning-li/mengning-li.github.io'
     }
   ]
 
