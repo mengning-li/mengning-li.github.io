@@ -84,14 +84,6 @@ const Contact = () => {
     } catch (error) {
       console.error('Error submitting form:', error)
       setSubmitStatus('error')
-      
-      // Fallback to mailto
-      const subject = encodeURIComponent(sanitizedData.subject || 'Contact from Portfolio Website')
-      const body = encodeURIComponent(
-        `Name: ${sanitizedData.name}\nEmail: ${sanitizedData.email}\n\nMessage:\n${sanitizedData.message}`
-      )
-      const mailtoLink = `mailto:limengninglmn@gmail.com?subject=${subject}&body=${body}`
-      window.open(mailtoLink, '_blank')
     } finally {
       setIsSubmitting(false)
     }
