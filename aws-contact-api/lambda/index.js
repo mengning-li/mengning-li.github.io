@@ -1,5 +1,6 @@
-const AWS = require('aws-sdk');
-const ses = new AWS.SES({ region: 'us-east-1' }); // Adjust region as needed
+// Use AWS SDK v3 for Node.js 18+
+const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
+const sesClient = new SESClient({ region: 'us-east-1' });
 
 // Rate limiting storage (in production, use DynamoDB)
 const rateLimitMap = new Map();
@@ -61,9 +62,11 @@ exports.handler = async (event) => {
     const allowedOrigins = [
         'https://mengning-li.github.io',
         'http://localhost:5173',
-        'http://127.0.0.1:5173'
+        'http://127.0.0.1:5173',
+        'file://',
+        'null'
     ];
-    const corsOrigin = allowedOrigins.includes(origin) ? origin : 'https://mengning-li.github.io';
+    const corsOrigin = allowedOrigins.includes(origin) || !origin ? '*' : 'https://mengning-li.github.io';
     
     const headers = {
         'Access-Control-Allow-Origin': corsOrigin,
@@ -209,7 +212,8 @@ Time: ${new Date().toISOString()}
         };
         
         // Send email
-        await ses.sendEmail(emailParams).promise();
+        const command = new SendEmailCommand(emailParams);
+        await sesClient.send(command);
         
         console.log('Email sent successfully');
         
