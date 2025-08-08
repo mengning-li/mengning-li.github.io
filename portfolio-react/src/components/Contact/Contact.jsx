@@ -235,12 +235,10 @@ const Contact = () => {
                 </div>
               )}
               
-              <motion.button
+              <button
                 type="submit"
                 className="btn btn-primary"
                 disabled={isSubmitting}
-                whileHover={!isSubmitting ? { scale: 1.05 } : {}}
-                whileTap={!isSubmitting ? { scale: 0.95 } : {}}
               >
                 {isSubmitting ? (
                   <>
@@ -253,7 +251,7 @@ const Contact = () => {
                     Send Message
                   </>
                 )}
-              </motion.button>
+              </button>
             </form>
           </motion.div>
         </motion.div>
