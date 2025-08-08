@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudWatch Alarms for Contact Form Monitoring'
+
+Parameters:
+  EmailForAlerts:
+    Type: String
+    Default: limengninglmn@gmail.com
+    Description: Email address to receive security alerts
+
+Resources:
+  # SNS Topic for alerts
+  SecurityAlertsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: portfolio-security-alerts
+      DisplayName: Portfolio Security Alerts
+
+  # SNS Subscription
+  SecurityAlertsSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: email
+      TopicArn: !Ref SecurityAlertsTopic
+      Endpoint: !Ref EmailForAlerts
+
+  # High Volume Alert (>50 emails per hour)
+  HighVolumeEmailAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: ContactForm-HighVolumeEmails
+      AlarmDescription: Alert when contact form sends >50 emails per hour
+      MetricName: Send
+      Namespace: AWS/SES
+      Statistic: Sum
+      Period: 3600  # 1 hour
+      EvaluationPeriods: 1
+      Threshold: 50
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - !Ref SecurityAlertsTopic
+      TreatMissingData: notBreaching
+
+  # Lambda Error Rate Alert
+  LambdaErrorRateAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: ContactForm-HighErrorRate
+      AlarmDescription: Alert when Lambda error rate is >10%
+      MetricName: ErrorRate
+      Namespace: AWS/Lambda
+      Dimensions:
+        - Name: FunctionName
+          Value: portfolio-contact-api-contact-handler
+      Statistic: Average
+      Period: 300  # 5 minutes
+      EvaluationPeriods: 2
+      Threshold: 0.1  # 10%
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - !Ref SecurityAlertsTopic
+
+  # API Gateway 4XX Errors
+  ApiGateway4XXAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: ContactForm-High4XXErrors
+      AlarmDescription: Alert on high 4XX error rate
+      MetricName: 4XXError
+      Namespace: AWS/ApiGateway
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 20
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - !Ref SecurityAlertsTopic
+
+Outputs:
+  SecurityAlertsTopicArn:
+    Description: ARN of the security alerts SNS topic
+    Value: !Ref SecurityAlertsTopic
+    Export:
+      Name: !Sub '${AWS::StackName}-SecurityAlertsTopic'

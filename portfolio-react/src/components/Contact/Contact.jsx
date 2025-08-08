@@ -59,8 +59,8 @@ const Contact = () => {
     }
 
     try {
-      // Submit to your Vercel API with Nodemailer
-      const response = await fetch('https://portfolio-contact-api-iota.vercel.app/api/send-email', {
+      // Submit to AWS API Gateway + Lambda
+      const response = await fetch('https://9f9oy6wbak.execute-api.us-east-1.amazonaws.com/prod/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -68,6 +68,7 @@ const Contact = () => {
         body: JSON.stringify({
           name: sanitizedData.name,
           email: sanitizedData.email,
+          subject: sanitizedData.subject,
           message: sanitizedData.message
         })
       })

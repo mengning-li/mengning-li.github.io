@@ -1,0 +1,265 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Portfolio Contact API - Lambda + API Gateway + SES'
+
+Parameters:
+  EmailAddress:
+    Type: String
+    Default: limengninglmn@gmail.com
+    Description: Email address to receive contact form submissions
+    
+  DomainName:
+    Type: String
+    Default: mengning-li.github.io
+    Description: Your website domain for CORS configuration
+
+Resources:
+  # IAM Role for Lambda
+  ContactLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${AWS::StackName}-lambda-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: SESPermissions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ses:SendEmail
+                  - ses:SendRawEmail
+                Resource: '*'
+
+  # Lambda Function
+  ContactLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-contact-handler'
+      Runtime: nodejs18.x
+      Handler: index.handler
+      Role: !GetAtt ContactLambdaRole.Arn
+      Timeout: 30
+      MemorySize: 256
+      Environment:
+        Variables:
+          RECIPIENT_EMAIL: !Ref EmailAddress
+          CORS_ORIGIN: !Sub 'https://${DomainName}'
+      Code:
+        ZipFile: |
+          const AWS = require('aws-sdk');
+          const ses = new AWS.SES({ region: process.env.AWS_REGION });
+          
+          exports.handler = async (event) => {
+              console.log('Received event:', JSON.stringify(event, null, 2));
+              
+              const headers = {
+                  'Access-Control-Allow-Origin': process.env.CORS_ORIGIN,
+                  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                  'Access-Control-Allow-Headers': 'Content-Type',
+                  'Content-Type': 'application/json'
+              };
+              
+              if (event.httpMethod === 'OPTIONS') {
+                  return {
+                      statusCode: 200,
+                      headers,
+                      body: ''
+                  };
+              }
+              
+              if (event.httpMethod !== 'POST') {
+                  return {
+                      statusCode: 405,
+                      headers,
+                      body: JSON.stringify({ message: 'Method not allowed' })
+                  };
+              }
+              
+              try {
+                  let body;
+                  if (typeof event.body === 'string') {
+                      body = JSON.parse(event.body);
+                  } else {
+                      body = event.body;
+                  }
+                  
+                  const { name, email, message, subject } = body;
+                  
+                  if (!name || !email || !message) {
+                      return {
+                          statusCode: 400,
+                          headers,
+                          body: JSON.stringify({ 
+                              success: false,
+                              message: 'Missing required fields: name, email, message' 
+                          })
+                      };
+                  }
+                  
+                  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                  if (!emailRegex.test(email)) {
+                      return {
+                          statusCode: 400,
+                          headers,
+                          body: JSON.stringify({ 
+                              success: false,
+                              message: 'Invalid email format' 
+                          })
+                      };
+                  }
+                  
+                  const emailSubject = subject || `Portfolio Contact: Message from ${name}`;
+                  const emailBody = `
+          Name: ${name}
+          Email: ${email}
+          Subject: ${subject || 'No subject'}
+          
+          Message:
+          ${message}
+          
+          ---
+          Sent from your portfolio website
+          Time: ${new Date().toISOString()}
+                  `.trim();
+                  
+                  const emailParams = {
+                      Source: process.env.RECIPIENT_EMAIL,
+                      Destination: {
+                          ToAddresses: [process.env.RECIPIENT_EMAIL]
+                      },
+                      Message: {
+                          Subject: {
+                              Data: emailSubject,
+                              Charset: 'UTF-8'
+                          },
+                          Body: {
+                              Text: {
+                                  Data: emailBody,
+                                  Charset: 'UTF-8'
+                              }
+                          }
+                      },
+                      ReplyToAddresses: [email]
+                  };
+                  
+                  await ses.sendEmail(emailParams).promise();
+                  
+                  console.log('Email sent successfully');
+                  
+                  return {
+                      statusCode: 200,
+                      headers,
+                      body: JSON.stringify({
+                          success: true,
+                          message: 'Message sent successfully!',
+                          timestamp: new Date().toISOString()
+                      })
+                  };
+                  
+              } catch (error) {
+                  console.error('Error processing contact form:', error);
+                  
+                  return {
+                      statusCode: 500,
+                      headers,
+                      body: JSON.stringify({
+                          success: false,
+                          message: 'Internal server error. Please try again later.'
+                      })
+                  };
+              }
+          };
+
+  # Lambda Permission for API Gateway
+  LambdaApiGatewayPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ContactLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ContactApiGateway}/*/*'
+
+  # API Gateway
+  ContactApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub '${AWS::StackName}-api'
+      Description: Portfolio Contact Form API
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  # API Gateway Resource
+  ContactResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ContactApiGateway
+      ParentId: !GetAtt ContactApiGateway.RootResourceId
+      PathPart: contact
+
+  # API Gateway Method (POST)
+  ContactMethodPost:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ContactApiGateway
+      ResourceId: !Ref ContactResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 
+          - 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations'
+          - LambdaArn: !GetAtt ContactLambdaFunction.Arn
+
+  # API Gateway Method (OPTIONS for CORS)
+  ContactMethodOptions:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ContactApiGateway
+      ResourceId: !Ref ContactResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 
+          - 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations'
+          - LambdaArn: !GetAtt ContactLambdaFunction.Arn
+
+  # API Gateway Deployment
+  ApiGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - ContactMethodPost
+      - ContactMethodOptions
+    Properties:
+      RestApiId: !Ref ContactApiGateway
+      StageName: prod
+
+Outputs:
+  ApiEndpoint:
+    Description: 'API Gateway endpoint URL for contact form'
+    Value: !Sub 'https://${ContactApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/contact'
+    Export:
+      Name: !Sub '${AWS::StackName}-api-endpoint'
+      
+  LambdaFunctionName:
+    Description: 'Lambda function name'
+    Value: !Ref ContactLambdaFunction
+    Export:
+      Name: !Sub '${AWS::StackName}-lambda-function'
+      
+  ApiGatewayId:
+    Description: 'API Gateway ID'
+    Value: !Ref ContactApiGateway
+    Export:
+      Name: !Sub '${AWS::StackName}-api-gateway-id'

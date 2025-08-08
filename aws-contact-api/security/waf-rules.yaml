@@ -1,0 +1,107 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'WAF Rules for Contact Form Protection'
+
+Parameters:
+  ApiGatewayId:
+    Type: String
+    Description: API Gateway ID to protect
+    Default: 9f9oy6wbak
+
+Resources:
+  # WAF Web ACL
+  ContactFormWebACL:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      Name: ContactFormProtection
+      Scope: REGIONAL
+      DefaultAction:
+        Allow: {}
+      Description: Protection for portfolio contact form
+      Rules:
+        # Rate limiting rule
+        - Name: RateLimitRule
+          Priority: 1
+          Statement:
+            RateBasedStatement:
+              Limit: 100  # Max 100 requests per 5 minutes per IP
+              AggregateKeyType: IP
+          Action:
+            Block: {}
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: RateLimitRule
+
+        # Geographic restriction (optional - block certain countries)
+        - Name: GeoBlockRule
+          Priority: 2
+          Statement:
+            GeoMatchStatement:
+              CountryCodes:
+                - CN  # Block China (example)
+                - RU  # Block Russia (example)
+                # Add other countries as needed
+          Action:
+            Block: {}
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: GeoBlockRule
+
+        # Known bad IPs rule
+        - Name: BadIPRule
+          Priority: 3
+          Statement:
+            IPSetReferenceStatement:
+              Arn: !GetAtt BadIPSet.Arn
+          Action:
+            Block: {}
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: BadIPRule
+
+        # SQL Injection protection
+        - Name: SQLiRule
+          Priority: 4
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesSQLiRuleSet
+          Action:
+            Block: {}
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: SQLiRule
+
+      VisibilityConfig:
+        SampledRequestsEnabled: true
+        CloudWatchMetricsEnabled: true
+        MetricName: ContactFormWebACL
+
+  # IP Set for known bad IPs
+  BadIPSet:
+    Type: AWS::WAFv2::IPSet
+    Properties:
+      Name: BadIPs
+      Scope: REGIONAL
+      IPAddressVersion: IPV4
+      Addresses: []  # Add known malicious IPs here
+      Description: Known malicious IP addresses
+
+  # Associate WAF with API Gateway
+  WebACLAssociation:
+    Type: AWS::WAFv2::WebACLAssociation
+    Properties:
+      ResourceArn: !Sub 'arn:aws:apigateway:${AWS::Region}::/restapis/${ApiGatewayId}/stages/prod'
+      WebACLArn: !GetAtt ContactFormWebACL.Arn
+
+Outputs:
+  WebACLArn:
+    Description: ARN of the Web ACL
+    Value: !GetAtt ContactFormWebACL.Arn
+  
+  BadIPSetArn:
+    Description: ARN of the Bad IP Set
+    Value: !GetAtt BadIPSet.Arn

@@ -1,0 +1,20 @@
+{
+  "name": "portfolio-contact-api",
+  "version": "1.0.0",
+  "description": "AWS Lambda function for portfolio contact form",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "aws",
+    "lambda",
+    "contact-form",
+    "ses"
+  ],
+  "author": "Mengning Li",
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "^2.1542.0"
+  }
+}
