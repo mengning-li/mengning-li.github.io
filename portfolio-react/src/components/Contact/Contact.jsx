@@ -60,7 +60,7 @@ const Contact = () => {
 
     try {
       // Submit to your Vercel API with Nodemailer
-      const response = await fetch('https://portfolio-contact-api-iota.vercel.app/api/send-email', {
+      const response = await fetch('https://xu6vqq4kqldxa3o2bsxahzhjka0ufsjy.lambda-url.us-east-1.on.aws/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
